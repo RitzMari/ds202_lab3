@@ -1,0 +1,124 @@
+---
+title: "Lab 4 Data Science"
+author: "Ashlan Simpson"
+date: "3/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+dat <- readxl::read_xls('/Users/Ashlan/Downloads/GSS.xls')
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+1) Find the average years of education for the respondents with each marital status. Arrange your output in a meaningful order and print. Describe any patterns you find.
+No Answer is the highest by two years which is pretty significant. Those who are widowed are the lowest which makes sense since they are likely to be the oldest and therefore from a time where most people didn't have as much education. Aside from that there isn't a great pattern.
+```{r}
+
+dat1 <- dat %>% mutate(Educ = as.numeric(`Highest year of school completed`))
+dat2 <- dat1 %>% mutate(x = factor(`Marital status`, c("Never married", "Married", "Separated", "Divorced", "Widowed", "No answer") ))
+dat2 %>%
+  group_by(`x`) %>% 
+  summarise(newName = mean(`Educ`, na.rm = TRUE))
+```
+
+2) Create a single data frame containing records for the better educated respondents with each marital status. A “better educated” respondent is someone who has strictly more years of education than the average among those with the same marital status. Print the structure of the data frame.
+```{r}
+dat3 <- dat2 %>%
+  group_by(`x`) %>%
+  filter(`Educ` > mean(`Educ`, na.rm = TRUE))
+str(dat3)
+```
+
+3) How is the happiness of a respondent related to his/her marriage status? Define that a person is happy if the response to question is “Very happy” or “Pretty happy”.
+The graphs feel fairly similar although married people seem the happiest between pretty happy and very happy. In fact their very happy is close to 40%. Separated is also by far the group with the least happy people. 
+```{r}
+df <- filter(dat2, is.na(`General happiness`) == F )
+df1 <- filter(df, is.na(`Marital status`) == F )
+a = df1 %>% group_by(`Marital status`, `General happiness`) %>%
+  summarize(`General happiness.n` = n()) %>%
+  mutate(`General happiness.per` = `General happiness.n`/ sum(`General happiness.n`))
+a %>%
+  ggplot(aes(x = `General happiness`, y= `General happiness.per`)) +
+  geom_bar(stat = 'identity') + theme(axis.text.x = element_text(angle = 90)) + facet_grid(~`Marital status`)
+```
+
+4) Does party affiliation affect the relationship you found in the last question?
+Party affiliation seem to have a big impact on how happy people our while also looking at maritial status. Values seem higher for demarcate than republican and Independents seem to have much lower values. It is worth noting that these graphs do not consider anything other than Pretty happy and very happy observations. 
+
+```{r}
+b = df1 %>% group_by(`Marital status`, `Political party affiliation`) %>%
+  filter(`General happiness` == "Pretty happy" | `General happiness` == "Very happy") %>%
+  summarize(`General happiness.n` = n()) %>%
+  mutate(`General happiness.per2` = `General happiness.n`/ sum(`General happiness.n`))
+
+
+b %>%
+  ggplot(aes(x = `Marital status`, y = `General happiness.per2`)) +
+  geom_bar(stat = 'identity') + theme(axis.text.x = element_text(angle = 90)) +
+  facet_wrap(~`Political party affiliation`)
+```
+5) How is marital status related to the education of a respondent? What are possible reasons accounting for the patterns you see?
+The graphs seem to be about the same shape except MArried might tend higher. I think the people who are likely to be married may have traits like hard working that are make for a better student and would therefore be more like to countinue education. 
+```{r}
+df1 %>%
+  ggplot(aes(x=Educ)) + geom_histogram() + facet_wrap(~`Marital status`)
+```
+6)Explore two more interesting questions, and answer those questions using the GSS data.
+I looked at whether sex had any impact on Education or happiness and it doesn't seem like it. The graphs for happiness is practically identical between sexes and the histograms education really seem to have the same shape. All the differences the two education graphs can be attributed to number of observations. 
+```{r}
+df1 %>%
+  ggplot(aes(x=Educ)) + geom_histogram() + facet_wrap(~`Respondents sex`)
+
+c = df1 %>% group_by(`Respondents sex`, `General happiness`) %>%
+  summarize(`General happiness.n` = n()) %>%
+  mutate(`General happiness.per3` = `General happiness.n`/ sum(`General happiness.n`))
+c %>%
+  ggplot(aes(x = `General happiness`, y= `General happiness.per3`)) +
+  geom_bar(stat = 'identity') + theme(axis.text.x = element_text(angle = 90)) +
+  facet_grid(~`Respondents sex`)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
